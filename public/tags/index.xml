@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Tags on briscosec.io</title>
+    <link>https://briscosec.io/tags/</link>
+    <description>Recent content in Tags on briscosec.io</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 13 Jun 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://briscosec.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Clickhouse</title>
+      <link>https://briscosec.io/tags/clickhouse/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/tags/clickhouse/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Detection</title>
+      <link>https://briscosec.io/tags/detection/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/tags/detection/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Homelab</title>
+      <link>https://briscosec.io/tags/homelab/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/tags/homelab/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Infrastructure</title>
+      <link>https://briscosec.io/tags/infrastructure/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/tags/infrastructure/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Threat-Intelligence</title>
+      <link>https://briscosec.io/tags/threat-intelligence/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/tags/threat-intelligence/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

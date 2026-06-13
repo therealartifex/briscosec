@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Infrastructure on briscosec.io</title>
+    <link>https://briscosec.io/tags/infrastructure/</link>
+    <description>Recent content in Infrastructure on briscosec.io</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 13 Jun 2026 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://briscosec.io/tags/infrastructure/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Building a Threat Intelligence Research Platform: Architecture and Design Decisions</title>
+      <link>https://briscosec.io/posts/homelab_post/</link>
+      <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
+      <guid>https://briscosec.io/posts/homelab_post/</guid>
+      <description>How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.</description>
+    </item>
+  </channel>
+</rss>

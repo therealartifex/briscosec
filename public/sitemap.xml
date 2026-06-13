@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://briscosec.io/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/posts/homelab_post/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/clickhouse/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/detection/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/homelab/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/infrastructure/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/posts/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/threat-intelligence/</loc>
+    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/categories/</loc>
+  </url>
+</urlset>
