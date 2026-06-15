@@ -44,6 +44,10 @@ CVE co-author. GXPN · GCPN · CRTO · OSCP.
 
 [menu]
   [[menu.main]]
+    name = "About"
+    url = "/about/"
+    weight = 5
+  [[menu.main]]
     name = "Posts"
     url = "/posts/"
     weight = 10

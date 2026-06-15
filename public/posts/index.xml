@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
-    <title>Posts on Brian J. Scott</title>
+    <title>Posts on Brian Scott</title>
     <link>http://localhost:1313/posts/</link>
-    <description>Recent content in Posts on Brian J. Scott</description>
+    <description>Recent content in Posts on Brian Scott</description>
     <generator>Hugo</generator>
     <language>en-us</language>
     <lastBuildDate>Sat, 13 Jun 2026 00:00:00 +0000</lastBuildDate>
@@ -13,7 +13,7 @@
       <link>http://localhost:1313/posts/homelab_post/</link>
       <pubDate>Sat, 13 Jun 2026 00:00:00 +0000</pubDate>
       <guid>http://localhost:1313/posts/homelab_post/</guid>
-      <description>How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.</description>
+      <description>Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.</description>
     </item>
   </channel>
 </rss>
