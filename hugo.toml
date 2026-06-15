@@ -22,7 +22,7 @@ theme = 'PaperMod'
   ShowRssButtonInSectionTermList = false
 
 [params.homeInfoParams]
-  Title = "Brian Scott - Portfolio and Writeups"
+  Title = "Brian Scott"
   Content = """
 Security researcher and threat intelligence practitioner. \
 Former Security Research Engineer at Cisco ASIG. \
