@@ -5,10 +5,10 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Building a Threat Intelligence Research Platform: Architecture and Design Decisions | Brian J. Scott</title>
+<title>Building a Threat Intelligence Research Platform: Architecture and Design Decisions | Brian Scott</title>
 <meta name="keywords" content="homelab, threat-intelligence, clickhouse, infrastructure, detection">
-<meta name="description" content="How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.">
-<meta name="author" content="Brian J. Scott">
+<meta name="description" content="Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.">
+<meta name="author" content="Brian Scott">
 <link rel="canonical" href="http://localhost:1313/posts/homelab_post/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.6ff46447b1fa3f8a5cc0bcae48088decc3ae37f5fbc99406a3aefc3bf0e6044a.css" integrity="sha256-b/RkR7H6P4pcwLyuSAiN7MOuN/X7yZQGo678O/DmBEo=" rel="preload stylesheet" as="style">
 <link rel="icon" href="http://localhost:1313/favicon.ico">
@@ -65,9 +65,9 @@
     }
 
 </script><meta property="og:url" content="http://localhost:1313/posts/homelab_post/">
-  <meta property="og:site_name" content="Brian J. Scott">
+  <meta property="og:site_name" content="Brian Scott">
   <meta property="og:title" content="Building a Threat Intelligence Research Platform: Architecture and Design Decisions">
-  <meta property="og:description" content="How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.">
+  <meta property="og:description" content="Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.">
   <meta property="og:locale" content="en_us">
   <meta property="og:type" content="article">
     <meta property="article:section" content="posts">
@@ -81,7 +81,7 @@
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Building a Threat Intelligence Research Platform: Architecture and Design Decisions">
-  <meta name="twitter:description" content="How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.">
+  <meta name="twitter:description" content="Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.">
 
 
 <script type="application/ld+json">
@@ -110,18 +110,18 @@
   "@type": "BlogPosting",
   "headline": "Building a Threat Intelligence Research Platform: Architecture and Design Decisions",
   "name": "Building a Threat Intelligence Research Platform: Architecture and Design Decisions",
-  "description": "How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.",
+  "description": "Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.",
   "keywords": [
     "homelab", "threat-intelligence", "clickhouse", "infrastructure", "detection"
   ],
-  "articleBody": "When I left Cisco earlier this year after four years doing product security research, I had a clear picture of what I wanted to build next: a proper infrastructure platform for the threat intelligence and investigation work I had been running in parallel at Southwest Valley Research Group. Not a collection of scripts running on a spare laptop, but a designed system with real network segmentation, a defensible data architecture, and the operational capacity to support serious analytical work.\nThis post documents the architecture decisions behind that build and the reasoning behind each one. I am writing it primarily because I found very few resources that approached homelab design from an intelligence operations perspective rather than a media server or self-hosting perspective. The requirements are different.\nThe Problem I Was Solving My existing setup had grown organically over several years and it showed. Breach data analysis, Telegram collection, case investigation tooling, and general security research were all running on the same machine with no isolation between them. A mistake in one operational context could affect another. Ingest a malformed archive and potentially affect active case data. Run a noisy scan and contaminate telemetry. There was no network visibility, no centralized logging, and no detection capability pointed inward.\nThe requirements I set for the new platform were:\nNetwork segmentation isolating operational security contexts from each other and from general internet traffic A production-grade data platform for the breach intelligence corpus, capable of handling hundreds of datasets and supporting fast analytical queries Detection infrastructure with actual network visibility and behavioral telemetry, not just perimeter controls A proper identity and access management layer replacing ad-hoc SSH key management Sufficient compute and memory to run local large language model inference without sending sensitive operational data to cloud APIs That last requirement shaped the hardware decision significantly.\nHardware The primary host is a Cisco UCS C240 M5, enterprise datacenter hardware rather than consumer homelab equipment. It runs loud, draws significant power, and requires a rack or dedicated space. For most homelab use cases it would be massive overkill.\nFor this use case it is correctly sized. Running a local LLM at any useful context length requires substantial RAM. The breach data analytical workload benefits from memory-mapped columnar storage. Running multiple isolated VM environments simultaneously without resource contention requires headroom. The machine provides that headroom without compromise.\nThe hypervisor is Proxmox VE, chosen for zero licensing cost and strong community documentation. The VMware alternative has become significantly less attractive since the Broadcom acquisition changed the licensing model. Proxmox handles the workload without issue.\nNetwork Architecture The network runs on a UniFi stack I was already using for the home network. I defined seven VLANs, each isolating a distinct security context:\nManagement: hypervisor management interfaces and network equipment administration. No internet access. Reachable only from a dedicated management workstation. Operations: active investigation tooling, Telegram collection, case work. Internet access through a dedicated egress path. Data Platform: ClickHouse, ingestion pipelines, analytical infrastructure. No direct internet access; data arrives via the ingestion VLAN. Ingestion: the boundary zone where raw collected data enters the platform. Isolated from both operations and data platform; data flows in one direction only. Detection: network sensor infrastructure. Receives a SPAN copy of all inter-VLAN traffic. No internet access. Write-only path to the data platform. Services: internal services including authentication, reverse proxy, and DNS. Lab/Research: isolated environment for working with potentially hostile samples, running offensive tooling, and general security research that should not touch production systems. Inter-VLAN traffic is controlled by firewall policy at the UniFi gateway. The default policy is deny; explicit rules permit only the specific flows the architecture requires. The detection VLAN receives a SPAN mirror of the trunk uplink, giving the sensor VM visibility into all inter-VLAN traffic without participating in any of it.\nThe segmentation philosophy is straightforward: assume compromise of any single VLAN and evaluate whether that compromise can propagate. Operations compromised should not affect case data. Lab compromised should not affect operations. Ingestion compromised should not allow data to flow backward into operations. Each boundary is enforced at the network layer, not just by convention.\nData Platform: Why ClickHouse The breach intelligence corpus spans several hundred datasets including traditional breach dumps, stealer logs, and ransomware leak data. The analytical questions I ask of it are aggregation-heavy: identity correlation across sources, infrastructure attribution, password reuse pattern analysis, actor profiling across datasets. These are OLAP workloads, not OLTP.\nI ran Elasticsearch for the first two years. It worked, but the resource profile was wrong for this use case. Elasticsearch is designed for log indexing and full-text search over document stores. Using it for columnar analytical queries over structured breach data meant paying a significant RAM tax for capabilities I was not using, while getting suboptimal performance on the queries I was actually running.\nClickHouse addressed this directly. The reasons I migrated:\nColumnar storage means analytical queries over specific fields across hundreds of millions of rows are fast because only the relevant columns are read from disk. A query asking “find all email addresses from this domain across all datasets” does not need to touch every field in every row.\nNative zstd compression at the column level. Breach data has highly repetitive structure: the same email domains, the same password patterns, the same field names. Column-level compression of repetitive data achieves significant storage reduction over row-oriented storage with general-purpose compression.\nResource footprint. At equivalent data volume, ClickHouse requires substantially less RAM than Elasticsearch for the queries I run. The difference is material when the same hardware also needs to run LLM inference.\nText indexes. Recent ClickHouse versions added full-text search indexes that cover the primary use case where Elasticsearch previously had an advantage. There is no longer a meaningful reason to choose Elasticsearch for this workload.\nThe migration required rewriting the ingestion pipeline and reworking the data models, but the performance and resource gains justified the effort.\nDetection Infrastructure A dedicated FreeBSD VM runs Zeek and Suricata, receiving SPAN-mirrored traffic from the trunk uplink via a dedicated virtual network interface. FreeBSD is not Linux. I chose it specifically for the sensor VM because it has a stronger default security posture and I wanted the sensor environment to be distinct from the Debian-based guest VMs that make up the rest of the platform.\nZeek generates structured connection logs, protocol analysis, and file extraction. Suricata provides signature-based detection against the same traffic stream. Both ship telemetry to Fluentbit, which normalizes and forwards to ClickHouse. Grafana dashboards provide visibility into the telemetry.\nThe result is network-level behavioral visibility for the entire platform, covering not just internet-facing traffic but all inter-VLAN flows. If something unexpected is crossing a segment boundary, it shows up.\nIdentity and Access Management The platform runs an SSH certificate authority using Ed25519 keys. Every host presents a certificate signed by the internal CA rather than a static authorized key. Certificate rotation is managed centrally. Removing access means revoking a certificate rather than hunting down authorized_keys files across every host.\nKeycloak provides SSO via OIDC for all internal web services. MFA is enforced using WebAuthn hardware tokens. No service accepts a username and password directly; everything authenticates through Keycloak.\nFreeRADIUS provides 802.1X WPA Enterprise authentication for the wireless network, backed by Keycloak for identity. Client devices authenticate with credentials rather than a shared passphrase, and RADIUS authentication events are logged to ClickHouse alongside network telemetry.\nThe identity architecture follows a single principle: every authentication event is logged, every access control decision is centralized, and there are no static credentials anywhere in the platform.\nWhat Comes Next The platform is in active deployment. Immediate next phases:\nAI inference layer. Ollama running a locally-hosted LLM for analyst-facing intelligence synthesis. The operational security requirement is firm: sensitive case data does not leave the platform. Local inference is the only acceptable approach for production intelligence work.\nRAG pipeline. Qdrant for vector search over the unstructured corpus including Telegram message data, forum posts, and investigation notes. The goal is a unified query interface spanning both structured breach data in ClickHouse and unstructured collection in Qdrant, accessible through natural language.\nGraph layer. Neo4j for entity relationship storage, connecting usernames, emails, infrastructure, and identities across data sources. Identity correlation today requires manual pivot chains; the graph layer automates traversal.\nDetection content. The sensor infrastructure is in place. Writing and tuning detection content against the behavioral baseline is the work that makes it operationally useful.\nI will document each of these as they come online.\nBrian Scott is a security researcher and threat intelligence practitioner. He spent four years as a Security Research Engineer at Cisco’s Advanced Security Initiatives Group and is the founder of Southwest Valley Research Group.\n",
-  "wordCount" : "1448",
+  "articleBody": "Several years of running threat intelligence and investigative operations on informal infrastructure made the gaps obvious. Breach data analysis, Telegram collection, case investigation tooling, and security research were sharing the same environment with no isolation between operational contexts, no network visibility, and no detection capability pointed inward. A malformed archive during ingestion could affect active case data. A noisy scan could contaminate telemetry. This post documents the architecture built to address those problems and the reasoning behind each design decision.\nRequirements The platform was designed around five core requirements:\nNetwork segmentation isolating distinct operational contexts from each other and from general internet traffic A production-grade analytical data store for the breach intelligence corpus, capable of spanning hundreds of datasets and supporting aggregation-heavy OLAP queries Network-level behavioral visibility with telemetry feeding a detection layer, covering all inter-VLAN traffic including flows that never reach internet egress A centralized identity and access management layer with auditable authentication, replacing ad-hoc SSH key management Sufficient compute and memory for local large language model inference, eliminating the operational security risk of sending sensitive case data to external cloud APIs Hardware and Hypervisor The primary host is a Cisco UCS C240 M5, a dual-socket 2U rack server running enterprise-class Xeon processors with several hundred gigabytes of RAM. The memory headroom was the primary selection criterion: local LLM inference at useful context lengths, memory-mapped columnar storage for the breach data analytical workload, and multiple isolated VM environments running simultaneously without resource contention all require it.\nThe hypervisor is Proxmox VE, selected for its zero licensing cost and comprehensive community documentation. The platform runs a mix of Debian and FreeBSD guest VMs depending on workload requirements.\nNetwork Architecture The network stack runs on UniFi hardware. Seven VLANs isolate distinct security contexts, with inter-VLAN traffic controlled by firewall policy at the gateway. The default policy is deny; explicit rules permit only the specific flows the architecture requires.\nManagement: Hypervisor management interfaces and network equipment administration. No internet routing. Reachable only from a dedicated management workstation on the same VLAN.\nOperations: Active investigation tooling, Telegram collection, and case work. Internet access through a dedicated egress path with logging.\nData Platform: ClickHouse, ingestion pipelines, and analytical infrastructure. No direct internet routing; data arrives exclusively via the ingestion VLAN.\nIngestion: The boundary zone where raw collected data enters the platform. Isolated from both the operations and data platform VLANs; data flows in one direction only. This prevents a compromised or malformed dataset from having network-level access to operational systems during processing.\nDetection: Network sensor infrastructure receiving a SPAN copy of the trunk uplink. No internet routing. The sensor VM has a write-only path to the data platform for telemetry delivery and participates in no other network flows.\nServices: Internal services including the reverse proxy, DNS resolver, and authentication infrastructure.\nLab/Research: Isolated environment for working with potentially hostile samples, running offensive tooling, and general security research. No routing to production VLANs.\nThe segmentation design follows a consistent threat model: assume compromise of any single VLAN and evaluate whether that compromise can propagate. Each boundary is enforced at the network layer via firewall policy rather than by application-level convention.\nThe detection VLAN receives a SPAN mirror of the trunk uplink, giving the sensor VM full visibility into all inter-VLAN traffic without participating in any of it. This means the sensor is invisible at the network layer while observing all flows across every segment boundary.\nData Platform The breach intelligence corpus spans several hundred datasets including traditional breach dumps, stealer logs, and ransomware leak data. The analytical workload is aggregation-heavy: identity correlation across sources, infrastructure attribution, password reuse pattern analysis, and actor profiling across datasets. These are OLAP queries over columnar data, structurally different from the document retrieval and full-text search workloads that Elasticsearch was designed for.\nClickHouse was selected after running both stacks against this workload. The relevant characteristics:\nColumnar storage. Analytical queries over specific fields across hundreds of millions of rows read only the columns they need. A query correlating email addresses across all datasets touches the email column exclusively, regardless of how many other fields exist in the schema.\nNative zstd compression at the column level. Breach data has highly repetitive structure within columns: the same email domains, password patterns, and field value distributions appear across datasets. Column-level compression of repetitive data achieves substantially better ratios than general-purpose row-level compression.\nResource footprint. At equivalent data volume, ClickHouse requires significantly less RAM than Elasticsearch for aggregation queries. This matters when the same hardware also runs LLM inference.\nText indexes. Recent ClickHouse versions added full-text search indexes that cover the use cases where Elasticsearch previously had an advantage.\nMigration cost. The ingestion pipeline was rewritten and the data models redesigned for the columnar paradigm. The performance and resource gains justified the effort.\nThe ingestion pipeline is Python, handling collection, deduplication, parsing, normalization, and schema-aligned loading. The full pipeline from raw source data to queryable ClickHouse records is owned and operated independently.\nDetection Infrastructure A dedicated FreeBSD VM runs Zeek and Suricata, receiving SPAN-mirrored traffic from the trunk uplink via a dedicated virtual network interface. FreeBSD was selected for the sensor VM for its security posture and to maintain a clear distinction between the sensor environment and the Debian-based guest VMs comprising the rest of the platform.\nZeek generates structured connection logs, protocol analysis records, and file extraction. Suricata provides signature-based detection against the same traffic stream. Both ship telemetry to Fluentbit, which normalizes and forwards to ClickHouse. Grafana provides dashboard visibility over the telemetry.\nThe result is behavioral visibility across all inter-VLAN flows, including inter-segment traffic that would otherwise be invisible at the host level. Unexpected flows crossing segment boundaries surface in telemetry.\nIdentity and Access Management The platform runs an internal SSH certificate authority using Ed25519 keys. Every host presents a certificate signed by the CA rather than a static authorized key. Removing access means revoking a certificate centrally. Certificate-based authentication also provides a consistent audit trail across all hosts.\nKeycloak provides SSO via OIDC for all internal web services. MFA is enforced via WebAuthn hardware tokens. No internal service accepts credentials directly; all authentication flows through Keycloak.\nFreeRADIUS provides 802.1X WPA Enterprise authentication for the wireless network, backed by Keycloak for identity. Client devices authenticate with per-device credentials rather than a shared passphrase. RADIUS authentication events are forwarded to ClickHouse alongside network telemetry, providing a unified authentication and network event timeline in a single queryable store.\nThe identity architecture enforces three properties: every authentication event is logged, every access control decision is centralized, and no static credentials exist anywhere in the platform.\nPlanned Extensions Local LLM inference. Ollama running a self-hosted model for analyst-facing intelligence synthesis. Local inference is a hard requirement for this use case: sensitive case data does not leave the platform.\nRAG pipeline. Qdrant for vector search over unstructured corpus data including Telegram message exports and forum content. Combined with ClickHouse for structured queries, the goal is a unified natural language query interface spanning both data types.\nGraph layer. Neo4j for entity relationship storage. Usernames, email addresses, infrastructure, and identities connected across data sources. The graph layer enables relationship traversal that SQL queries cannot express: finding all entities within N hops of a known actor across all datasets.\nDetection content. The sensor infrastructure is operational. Writing and tuning detection logic against the behavioral baseline is the work that makes the visibility layer analytically useful.\n",
+  "wordCount" : "1234",
   "inLanguage": "en",
   "datePublished": "2026-06-13T00:00:00Z",
   "dateModified": "2026-06-13T00:00:00Z",
   "author":{
     "@type": "Person",
-    "name": "Brian J. Scott"
+    "name": "Brian Scott"
   },
   "mainEntityOfPage": {
     "@type": "WebPage",
@@ -129,7 +129,7 @@
   },
   "publisher": {
     "@type": "Organization",
-    "name": "Brian J. Scott",
+    "name": "Brian Scott",
     "logo": {
       "@type": "ImageObject",
       "url": "http://localhost:1313/favicon.ico"
@@ -142,7 +142,7 @@
     <header class="header">
     <nav class="header-nav">
         <div class="logo">
-            <a href="http://localhost:1313/" accesskey="h" title="Brian J. Scott (Alt + H)">Brian J. Scott</a>
+            <a href="http://localhost:1313/" accesskey="h" title="Brian Scott (Alt + H)">Brian Scott</a>
             <div class="logo-switches">
                 <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
@@ -167,6 +167,11 @@
             </div>
         </div>
         <ul id="menu" class="menu">
+            <li>
+                <a href="http://localhost:1313/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
             <li>
                 <a href="http://localhost:1313/posts/" title="Posts">
                     <span>Posts</span>
@@ -205,199 +210,170 @@
       Building a Threat Intelligence Research Platform: Architecture and Design Decisions
     </h1>
     <div class="post-description">
-      How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.
+      Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis.
     </div>
     <div class="post-meta">
 
-<span title='2026-06-13 00:00:00 +0000 UTC'>June 13, 2026</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>Brian J. Scott</span>
+<span title='2026-06-13 00:00:00 +0000 UTC'>June 13, 2026</span>&nbsp;·&nbsp;<span>6 min</span>&nbsp;·&nbsp;<span>Brian Scott</span>
 
 </div>
   </header> 
-  <div class="post-content md-content"><p>When I left Cisco earlier this year after four years doing product security
-research, I had a clear picture of what I wanted to build next: a proper
-infrastructure platform for the threat intelligence and investigation work
-I had been running in parallel at Southwest Valley Research Group. Not
-a collection of scripts running on a spare laptop, but a designed system
-with real network segmentation, a defensible data architecture, and the
-operational capacity to support serious analytical work.</p>
-<p>This post documents the architecture decisions behind that build and the
-reasoning behind each one. I am writing it primarily because I found very
-few resources that approached homelab design from an intelligence
-operations perspective rather than a media server or self-hosting
-perspective. The requirements are different.</p>
+  <div class="post-content md-content"><p>Several years of running threat intelligence and investigative operations on
+informal infrastructure made the gaps obvious. Breach data analysis, Telegram
+collection, case investigation tooling, and security research were sharing the
+same environment with no isolation between operational contexts, no network
+visibility, and no detection capability pointed inward. A malformed archive
+during ingestion could affect active case data. A noisy scan could contaminate
+telemetry. This post documents the architecture built to address those
+problems and the reasoning behind each design decision.</p>
 <hr>
-<h2 id="the-problem-i-was-solving">The Problem I Was Solving<a hidden class="anchor" aria-hidden="true" href="#the-problem-i-was-solving">#</a></h2>
-<p>My existing setup had grown organically over several years and it showed.
-Breach data analysis, Telegram collection, case investigation tooling,
-and general security research were all running on the same machine with
-no isolation between them. A mistake in one operational context could
-affect another. Ingest a malformed archive and potentially affect active
-case data. Run a noisy scan and contaminate telemetry. There was no
-network visibility, no centralized logging, and no detection capability
-pointed inward.</p>
-<p>The requirements I set for the new platform were:</p>
+<h2 id="requirements">Requirements<a hidden class="anchor" aria-hidden="true" href="#requirements">#</a></h2>
+<p>The platform was designed around five core requirements:</p>
 <ul>
-<li><strong>Network segmentation</strong> isolating operational security contexts from
-each other and from general internet traffic</li>
-<li><strong>A production-grade data platform</strong> for the breach intelligence
-corpus, capable of handling hundreds of datasets and supporting fast
-analytical queries</li>
-<li><strong>Detection infrastructure</strong> with actual network visibility and
-behavioral telemetry, not just perimeter controls</li>
-<li><strong>A proper identity and access management layer</strong> replacing ad-hoc
-SSH key management</li>
-<li><strong>Sufficient compute and memory</strong> to run local large language model
-inference without sending sensitive operational data to cloud APIs</li>
+<li>Network segmentation isolating distinct operational contexts from each other
+and from general internet traffic</li>
+<li>A production-grade analytical data store for the breach intelligence corpus,
+capable of spanning hundreds of datasets and supporting aggregation-heavy
+OLAP queries</li>
+<li>Network-level behavioral visibility with telemetry feeding a detection layer,
+covering all inter-VLAN traffic including flows that never reach internet egress</li>
+<li>A centralized identity and access management layer with auditable
+authentication, replacing ad-hoc SSH key management</li>
+<li>Sufficient compute and memory for local large language model inference,
+eliminating the operational security risk of sending sensitive case data to
+external cloud APIs</li>
 </ul>
-<p>That last requirement shaped the hardware decision significantly.</p>
 <hr>
-<h2 id="hardware">Hardware<a hidden class="anchor" aria-hidden="true" href="#hardware">#</a></h2>
-<p>The primary host is a Cisco UCS C240 M5, enterprise datacenter hardware
-rather than consumer homelab equipment. It runs loud, draws significant
-power, and requires a rack or dedicated space. For most homelab use cases
-it would be massive overkill.</p>
-<p>For this use case it is correctly sized. Running a local LLM at any
-useful context length requires substantial RAM. The breach data analytical
-workload benefits from memory-mapped columnar storage. Running multiple
-isolated VM environments simultaneously without resource contention
-requires headroom. The machine provides that headroom without compromise.</p>
-<p>The hypervisor is Proxmox VE, chosen for zero licensing cost and strong
-community documentation. The VMware alternative has become significantly
-less attractive since the Broadcom acquisition changed the licensing
-model. Proxmox handles the workload without issue.</p>
+<h2 id="hardware-and-hypervisor">Hardware and Hypervisor<a hidden class="anchor" aria-hidden="true" href="#hardware-and-hypervisor">#</a></h2>
+<p>The primary host is a Cisco UCS C240 M5, a dual-socket 2U rack server
+running enterprise-class Xeon processors with several hundred gigabytes of
+RAM. The memory headroom was the primary selection criterion: local LLM
+inference at useful context lengths, memory-mapped columnar storage for the
+breach data analytical workload, and multiple isolated VM environments running
+simultaneously without resource contention all require it.</p>
+<p>The hypervisor is Proxmox VE, selected for its zero licensing cost and
+comprehensive community documentation. The platform runs a mix of Debian
+and FreeBSD guest VMs depending on workload requirements.</p>
 <hr>
 <h2 id="network-architecture">Network Architecture<a hidden class="anchor" aria-hidden="true" href="#network-architecture">#</a></h2>
-<p>The network runs on a UniFi stack I was already using for the home
-network. I defined seven VLANs, each isolating a distinct security
-context:</p>
-<ul>
-<li><strong>Management:</strong> hypervisor management interfaces and network equipment
-administration. No internet access. Reachable only from a dedicated
-management workstation.</li>
-<li><strong>Operations:</strong> active investigation tooling, Telegram collection,
-case work. Internet access through a dedicated egress path.</li>
-<li><strong>Data Platform:</strong> ClickHouse, ingestion pipelines, analytical
-infrastructure. No direct internet access; data arrives via the
-ingestion VLAN.</li>
-<li><strong>Ingestion:</strong> the boundary zone where raw collected data enters the
-platform. Isolated from both operations and data platform; data flows
-in one direction only.</li>
-<li><strong>Detection:</strong> network sensor infrastructure. Receives a SPAN copy
-of all inter-VLAN traffic. No internet access. Write-only path to the
-data platform.</li>
-<li><strong>Services:</strong> internal services including authentication, reverse
-proxy, and DNS.</li>
-<li><strong>Lab/Research:</strong> isolated environment for working with potentially
-hostile samples, running offensive tooling, and general security
-research that should not touch production systems.</li>
-</ul>
-<p>Inter-VLAN traffic is controlled by firewall policy at the UniFi
-gateway. The default policy is deny; explicit rules permit only the
-specific flows the architecture requires. The detection VLAN receives
-a SPAN mirror of the trunk uplink, giving the sensor VM visibility
-into all inter-VLAN traffic without participating in any of it.</p>
-<p>The segmentation philosophy is straightforward: assume compromise of
-any single VLAN and evaluate whether that compromise can propagate.
-Operations compromised should not affect case data. Lab compromised
-should not affect operations. Ingestion compromised should not allow
-data to flow backward into operations. Each boundary is enforced at
-the network layer, not just by convention.</p>
+<p>The network stack runs on UniFi hardware. Seven VLANs isolate distinct
+security contexts, with inter-VLAN traffic controlled by firewall policy at
+the gateway. The default policy is deny; explicit rules permit only the
+specific flows the architecture requires.</p>
+<p><strong>Management:</strong> Hypervisor management interfaces and network equipment
+administration. No internet routing. Reachable only from a dedicated
+management workstation on the same VLAN.</p>
+<p><strong>Operations:</strong> Active investigation tooling, Telegram collection, and case
+work. Internet access through a dedicated egress path with logging.</p>
+<p><strong>Data Platform:</strong> ClickHouse, ingestion pipelines, and analytical
+infrastructure. No direct internet routing; data arrives exclusively via
+the ingestion VLAN.</p>
+<p><strong>Ingestion:</strong> The boundary zone where raw collected data enters the
+platform. Isolated from both the operations and data platform VLANs; data
+flows in one direction only. This prevents a compromised or malformed
+dataset from having network-level access to operational systems during
+processing.</p>
+<p><strong>Detection:</strong> Network sensor infrastructure receiving a SPAN copy of the
+trunk uplink. No internet routing. The sensor VM has a write-only path to
+the data platform for telemetry delivery and participates in no other
+network flows.</p>
+<p><strong>Services:</strong> Internal services including the reverse proxy, DNS resolver,
+and authentication infrastructure.</p>
+<p><strong>Lab/Research:</strong> Isolated environment for working with potentially hostile
+samples, running offensive tooling, and general security research. No
+routing to production VLANs.</p>
+<p>The segmentation design follows a consistent threat model: assume compromise
+of any single VLAN and evaluate whether that compromise can propagate. Each
+boundary is enforced at the network layer via firewall policy rather than
+by application-level convention.</p>
+<p>The detection VLAN receives a SPAN mirror of the trunk uplink, giving the
+sensor VM full visibility into all inter-VLAN traffic without participating
+in any of it. This means the sensor is invisible at the network layer while
+observing all flows across every segment boundary.</p>
 <hr>
-<h2 id="data-platform-why-clickhouse">Data Platform: Why ClickHouse<a hidden class="anchor" aria-hidden="true" href="#data-platform-why-clickhouse">#</a></h2>
+<h2 id="data-platform">Data Platform<a hidden class="anchor" aria-hidden="true" href="#data-platform">#</a></h2>
 <p>The breach intelligence corpus spans several hundred datasets including
 traditional breach dumps, stealer logs, and ransomware leak data. The
-analytical questions I ask of it are aggregation-heavy: identity
-correlation across sources, infrastructure attribution, password reuse
-pattern analysis, actor profiling across datasets. These are OLAP
-workloads, not OLTP.</p>
-<p>I ran Elasticsearch for the first two years. It worked, but the resource
-profile was wrong for this use case. Elasticsearch is designed for log
-indexing and full-text search over document stores. Using it for
-columnar analytical queries over structured breach data meant paying a
-significant RAM tax for capabilities I was not using, while getting
-suboptimal performance on the queries I was actually running.</p>
-<p>ClickHouse addressed this directly. The reasons I migrated:</p>
-<p><strong>Columnar storage</strong> means analytical queries over specific fields across
-hundreds of millions of rows are fast because only the relevant columns
-are read from disk. A query asking &ldquo;find all email addresses from this
-domain across all datasets&rdquo; does not need to touch every field in every
-row.</p>
-<p><strong>Native zstd compression</strong> at the column level. Breach data has highly
-repetitive structure: the same email domains, the same password patterns,
-the same field names. Column-level compression of repetitive data achieves
-significant storage reduction over row-oriented storage with
-general-purpose compression.</p>
+analytical workload is aggregation-heavy: identity correlation across
+sources, infrastructure attribution, password reuse pattern analysis, and
+actor profiling across datasets. These are OLAP queries over columnar data,
+structurally different from the document retrieval and full-text search
+workloads that Elasticsearch was designed for.</p>
+<p>ClickHouse was selected after running both stacks against this workload.
+The relevant characteristics:</p>
+<p><strong>Columnar storage.</strong> Analytical queries over specific fields across hundreds
+of millions of rows read only the columns they need. A query correlating
+email addresses across all datasets touches the email column exclusively,
+regardless of how many other fields exist in the schema.</p>
+<p><strong>Native zstd compression at the column level.</strong> Breach data has highly
+repetitive structure within columns: the same email domains, password
+patterns, and field value distributions appear across datasets. Column-level
+compression of repetitive data achieves substantially better ratios than
+general-purpose row-level compression.</p>
 <p><strong>Resource footprint.</strong> At equivalent data volume, ClickHouse requires
-substantially less RAM than Elasticsearch for the queries I run. The
-difference is material when the same hardware also needs to run LLM
-inference.</p>
-<p><strong>Text indexes.</strong> Recent ClickHouse versions added full-text search
-indexes that cover the primary use case where Elasticsearch previously
-had an advantage. There is no longer a meaningful reason to choose
-Elasticsearch for this workload.</p>
-<p>The migration required rewriting the ingestion pipeline and reworking
-the data models, but the performance and resource gains justified the
-effort.</p>
+significantly less RAM than Elasticsearch for aggregation queries. This
+matters when the same hardware also runs LLM inference.</p>
+<p><strong>Text indexes.</strong> Recent ClickHouse versions added full-text search indexes
+that cover the use cases where Elasticsearch previously had an advantage.</p>
+<p><strong>Migration cost.</strong> The ingestion pipeline was rewritten and the data models
+redesigned for the columnar paradigm. The performance and resource gains
+justified the effort.</p>
+<p>The ingestion pipeline is Python, handling collection, deduplication,
+parsing, normalization, and schema-aligned loading. The full pipeline from
+raw source data to queryable ClickHouse records is owned and operated
+independently.</p>
 <hr>
 <h2 id="detection-infrastructure">Detection Infrastructure<a hidden class="anchor" aria-hidden="true" href="#detection-infrastructure">#</a></h2>
 <p>A dedicated FreeBSD VM runs Zeek and Suricata, receiving SPAN-mirrored
 traffic from the trunk uplink via a dedicated virtual network interface.
-FreeBSD is not Linux. I chose it specifically for the sensor VM because
-it has a stronger default security posture and I wanted the sensor
-environment to be distinct from the Debian-based guest VMs that make
-up the rest of the platform.</p>
-<p>Zeek generates structured connection logs, protocol analysis, and file
-extraction. Suricata provides signature-based detection against the same
-traffic stream. Both ship telemetry to Fluentbit, which normalizes and
-forwards to ClickHouse. Grafana dashboards provide visibility into the
-telemetry.</p>
-<p>The result is network-level behavioral visibility for the entire platform,
-covering not just internet-facing traffic but all inter-VLAN flows. If
-something unexpected is crossing a segment boundary, it shows up.</p>
+FreeBSD was selected for the sensor VM for its security posture and to
+maintain a clear distinction between the sensor environment and the
+Debian-based guest VMs comprising the rest of the platform.</p>
+<p>Zeek generates structured connection logs, protocol analysis records, and
+file extraction. Suricata provides signature-based detection against the
+same traffic stream. Both ship telemetry to Fluentbit, which normalizes
+and forwards to ClickHouse. Grafana provides dashboard visibility over
+the telemetry.</p>
+<p>The result is behavioral visibility across all inter-VLAN flows, including
+inter-segment traffic that would otherwise be invisible at the host level.
+Unexpected flows crossing segment boundaries surface in telemetry.</p>
 <hr>
 <h2 id="identity-and-access-management">Identity and Access Management<a hidden class="anchor" aria-hidden="true" href="#identity-and-access-management">#</a></h2>
-<p>The platform runs an SSH certificate authority using Ed25519 keys. Every
-host presents a certificate signed by the internal CA rather than a static
-authorized key. Certificate rotation is managed centrally. Removing access
-means revoking a certificate rather than hunting down authorized_keys
-files across every host.</p>
+<p>The platform runs an internal SSH certificate authority using Ed25519 keys.
+Every host presents a certificate signed by the CA rather than a static
+authorized key. Removing access means revoking a certificate centrally.
+Certificate-based authentication also provides a consistent audit trail
+across all hosts.</p>
 <p>Keycloak provides SSO via OIDC for all internal web services. MFA is
-enforced using WebAuthn hardware tokens. No service accepts a username
-and password directly; everything authenticates through Keycloak.</p>
+enforced via WebAuthn hardware tokens. No internal service accepts
+credentials directly; all authentication flows through Keycloak.</p>
 <p>FreeRADIUS provides 802.1X WPA Enterprise authentication for the wireless
-network, backed by Keycloak for identity. Client devices authenticate
-with credentials rather than a shared passphrase, and RADIUS
-authentication events are logged to ClickHouse alongside network
-telemetry.</p>
-<p>The identity architecture follows a single principle: every authentication
-event is logged, every access control decision is centralized, and there
-are no static credentials anywhere in the platform.</p>
+network, backed by Keycloak for identity. Client devices authenticate with
+per-device credentials rather than a shared passphrase. RADIUS
+authentication events are forwarded to ClickHouse alongside network
+telemetry, providing a unified authentication and network event timeline
+in a single queryable store.</p>
+<p>The identity architecture enforces three properties: every authentication
+event is logged, every access control decision is centralized, and no
+static credentials exist anywhere in the platform.</p>
 <hr>
-<h2 id="what-comes-next">What Comes Next<a hidden class="anchor" aria-hidden="true" href="#what-comes-next">#</a></h2>
-<p>The platform is in active deployment. Immediate next phases:</p>
-<p><strong>AI inference layer.</strong> Ollama running a locally-hosted LLM for
-analyst-facing intelligence synthesis. The operational security
-requirement is firm: sensitive case data does not leave the platform.
-Local inference is the only acceptable approach for production
-intelligence work.</p>
-<p><strong>RAG pipeline.</strong> Qdrant for vector search over the unstructured corpus
-including Telegram message data, forum posts, and investigation notes.
-The goal is a unified query interface spanning both structured breach
-data in ClickHouse and unstructured collection in Qdrant, accessible
-through natural language.</p>
-<p><strong>Graph layer.</strong> Neo4j for entity relationship storage, connecting
-usernames, emails, infrastructure, and identities across data sources.
-Identity correlation today requires manual pivot chains; the graph layer
-automates traversal.</p>
-<p><strong>Detection content.</strong> The sensor infrastructure is in place. Writing
-and tuning detection content against the behavioral baseline is the
-work that makes it operationally useful.</p>
-<p>I will document each of these as they come online.</p>
-<hr>
-<p><em>Brian Scott is a security researcher and threat intelligence
-practitioner. He spent four years as a Security Research Engineer at
-Cisco&rsquo;s Advanced Security Initiatives Group and is the founder of
-Southwest Valley Research Group.</em></p>
+<h2 id="planned-extensions">Planned Extensions<a hidden class="anchor" aria-hidden="true" href="#planned-extensions">#</a></h2>
+<p><strong>Local LLM inference.</strong> Ollama running a self-hosted model for
+analyst-facing intelligence synthesis. Local inference is a hard
+requirement for this use case: sensitive case data does not leave the
+platform.</p>
+<p><strong>RAG pipeline.</strong> Qdrant for vector search over unstructured corpus data
+including Telegram message exports and forum content. Combined with
+ClickHouse for structured queries, the goal is a unified natural language
+query interface spanning both data types.</p>
+<p><strong>Graph layer.</strong> Neo4j for entity relationship storage. Usernames, email
+addresses, infrastructure, and identities connected across data sources.
+The graph layer enables relationship traversal that SQL queries cannot
+express: finding all entities within N hops of a known actor across all
+datasets.</p>
+<p><strong>Detection content.</strong> The sensor infrastructure is operational. Writing
+and tuning detection logic against the behavioral baseline is the work
+that makes the visibility layer analytically useful.</p>
 
 
   </div>
@@ -416,7 +392,7 @@ Southwest Valley Research Group.</em></p>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="http://localhost:1313/">Brian J. Scott</a></span> · 
+        <span>&copy; 2026 <a href="http://localhost:1313/">Brian Scott</a></span> · 
 
     
     
