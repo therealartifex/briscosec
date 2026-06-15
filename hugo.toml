@@ -1,4 +1,57 @@
 baseURL = 'https://briscosec.io/'
 languageCode = 'en-us'
-title = 'briscosec.io'
+title = 'Brian J. Scott'
 theme = 'PaperMod'
+
+[pagination]
+  pagerSize = 5
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[params]
+  env = "production"
+  author = "Brian J. Scott"
+  description = "Security researcher and threat intelligence practitioner"
+  defaultTheme = "auto"
+  ShowReadingTime = true
+  ShowPostNavLinks = true
+  ShowBreadCrumbs = true
+  ShowCodeCopyButtons = true
+  ShowShareButtons = false
+  ShowRssButtonInSectionTermList = false
+
+[params.homeInfoParams]
+  Title = "Brian J. Scott"
+  Content = """
+Security researcher and threat intelligence practitioner. \
+Former Security Research Engineer at Cisco ASIG. \
+Founder of Southwest Valley Research Group. \
+CVE co-author. GXPN · GCPN · CRTO · OSCP.
+"""
+
+[[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/therealartifex"
+
+[[params.socialIcons]]
+  name = "linkedin"
+  url = "https://linkedin.com/in/brian-scott-1765b9aa"
+
+[[params.socialIcons]]
+  name = "email"
+  url = "mailto:contact@briscosec.io"
+
+[menu]
+  [[menu.main]]
+    name = "Posts"
+    url = "/posts/"
+    weight = 10
+  [[menu.main]]
+    name = "Resume"
+    url = "/resume.pdf"
+    weight = 20
+  [[menu.main]]
+    name = "Search"
+    url = "/search/"
+    weight = 30

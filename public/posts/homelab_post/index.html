@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html lang="en" dir="auto" data-theme="auto">
 
-<head><meta charset="utf-8">
+<head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <meta name="robots" content="index, follow">
-<title>Building a Threat Intelligence Research Platform: Architecture and Design Decisions | briscosec.io</title>
+<title>Building a Threat Intelligence Research Platform: Architecture and Design Decisions | Brian J. Scott</title>
 <meta name="keywords" content="homelab, threat-intelligence, clickhouse, infrastructure, detection">
 <meta name="description" content="How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.">
-<meta name="author" content="">
-<link rel="canonical" href="https://briscosec.io/posts/homelab_post/">
+<meta name="author" content="Brian J. Scott">
+<link rel="canonical" href="http://localhost:1313/posts/homelab_post/">
 <link crossorigin="anonymous" href="/assets/css/stylesheet.6ff46447b1fa3f8a5cc0bcae48088decc3ae37f5fbc99406a3aefc3bf0e6044a.css" integrity="sha256-b/RkR7H6P4pcwLyuSAiN7MOuN/X7yZQGo678O/DmBEo=" rel="preload stylesheet" as="style">
-<link rel="icon" href="https://briscosec.io/favicon.ico">
-<link rel="icon" type="image/png" sizes="16x16" href="https://briscosec.io/favicon-16x16.png">
-<link rel="icon" type="image/png" sizes="32x32" href="https://briscosec.io/favicon-32x32.png">
-<link rel="apple-touch-icon" href="https://briscosec.io/apple-touch-icon.png">
-<link rel="mask-icon" href="https://briscosec.io/safari-pinned-tab.svg">
+<link rel="icon" href="http://localhost:1313/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="http://localhost:1313/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="http://localhost:1313/favicon-32x32.png">
+<link rel="apple-touch-icon" href="http://localhost:1313/apple-touch-icon.png">
+<link rel="mask-icon" href="http://localhost:1313/safari-pinned-tab.svg">
 <meta name="theme-color" content="#2e2e33">
 <meta name="msapplication-TileColor" content="#2e2e33">
-<link rel="alternate" hreflang="en" href="https://briscosec.io/posts/homelab_post/">
+<link rel="alternate" hreflang="en" href="http://localhost:1313/posts/homelab_post/">
 <noscript>
     <style>
         #theme-toggle,
@@ -64,8 +64,8 @@
         document.querySelector("html").dataset.theme = 'light';
     }
 
-</script><meta property="og:url" content="https://briscosec.io/posts/homelab_post/">
-  <meta property="og:site_name" content="briscosec.io">
+</script><meta property="og:url" content="http://localhost:1313/posts/homelab_post/">
+  <meta property="og:site_name" content="Brian J. Scott">
   <meta property="og:title" content="Building a Threat Intelligence Research Platform: Architecture and Design Decisions">
   <meta property="og:description" content="How and why I designed a multi-tier security research environment for threat intelligence operations, detection engineering, and breach data analysis.">
   <meta property="og:locale" content="en_us">
@@ -93,13 +93,13 @@
       "@type": "ListItem",
       "position":  1 ,
       "name": "Posts",
-      "item": "https://briscosec.io/posts/"
+      "item": "http://localhost:1313/posts/"
     }, 
     {
       "@type": "ListItem",
       "position":  2 ,
       "name": "Building a Threat Intelligence Research Platform: Architecture and Design Decisions",
-      "item": "https://briscosec.io/posts/homelab_post/"
+      "item": "http://localhost:1313/posts/homelab_post/"
     }
   ]
 }
@@ -119,16 +119,20 @@
   "inLanguage": "en",
   "datePublished": "2026-06-13T00:00:00Z",
   "dateModified": "2026-06-13T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Brian J. Scott"
+  },
   "mainEntityOfPage": {
     "@type": "WebPage",
-    "@id": "https://briscosec.io/posts/homelab_post/"
+    "@id": "http://localhost:1313/posts/homelab_post/"
   },
   "publisher": {
     "@type": "Organization",
-    "name": "briscosec.io",
+    "name": "Brian J. Scott",
     "logo": {
       "@type": "ImageObject",
-      "url": "https://briscosec.io/favicon.ico"
+      "url": "http://localhost:1313/favicon.ico"
     }
   }
 }
@@ -138,7 +142,7 @@
     <header class="header">
     <nav class="header-nav">
         <div class="logo">
-            <a href="https://briscosec.io/" accesskey="h" title="briscosec.io (Alt + H)">briscosec.io</a>
+            <a href="http://localhost:1313/" accesskey="h" title="Brian J. Scott (Alt + H)">Brian J. Scott</a>
             <div class="logo-switches">
                 <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
                     <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
@@ -163,6 +167,21 @@
             </div>
         </div>
         <ul id="menu" class="menu">
+            <li>
+                <a href="http://localhost:1313/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/resume.pdf" title="Resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+            <li>
+                <a href="http://localhost:1313/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
         </ul>
     </nav>
 </header>
@@ -170,7 +189,18 @@
 
 <article class="post-single">
   <header class="post-header">
-    
+    <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <a href="/posts/">Posts</a>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+</nav>
     <h1 class="post-title entry-hint-parent">
       Building a Threat Intelligence Research Platform: Architecture and Design Decisions
     </h1>
@@ -179,7 +209,7 @@
     </div>
     <div class="post-meta">
 
-<span title='2026-06-13 00:00:00 +0000 UTC'>June 13, 2026</span>
+<span title='2026-06-13 00:00:00 +0000 UTC'>June 13, 2026</span>&nbsp;·&nbsp;<span>7 min</span>&nbsp;·&nbsp;<span>Brian J. Scott</span>
 
 </div>
   </header> 
@@ -374,18 +404,19 @@ Southwest Valley Research Group.</em></p>
 
   <footer class="post-footer">
     <ul class="post-tags">
-      <li><a href="https://briscosec.io/tags/homelab/">Homelab</a></li>
-      <li><a href="https://briscosec.io/tags/threat-intelligence/">Threat-Intelligence</a></li>
-      <li><a href="https://briscosec.io/tags/clickhouse/">Clickhouse</a></li>
-      <li><a href="https://briscosec.io/tags/infrastructure/">Infrastructure</a></li>
-      <li><a href="https://briscosec.io/tags/detection/">Detection</a></li>
+      <li><a href="http://localhost:1313/tags/homelab/">Homelab</a></li>
+      <li><a href="http://localhost:1313/tags/threat-intelligence/">Threat-Intelligence</a></li>
+      <li><a href="http://localhost:1313/tags/clickhouse/">Clickhouse</a></li>
+      <li><a href="http://localhost:1313/tags/infrastructure/">Infrastructure</a></li>
+      <li><a href="http://localhost:1313/tags/detection/">Detection</a></li>
     </ul>
+
   </footer>
 </article>
     </main>
     
 <footer class="footer">
-        <span>&copy; 2026 <a href="https://briscosec.io/">briscosec.io</a></span> · 
+        <span>&copy; 2026 <a href="http://localhost:1313/">Brian J. Scott</a></span> · 
 
     
     
@@ -461,6 +492,53 @@ Southwest Valley Research Group.</em></p>
         }
     })
 
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
 </script>
 </body>
 
