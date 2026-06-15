@@ -1,6 +1,6 @@
 baseURL = 'https://briscosec.io/'
 languageCode = 'en-us'
-title = 'Brian J. Scott'
+title = 'Brian Scott'
 theme = 'PaperMod'
 
 [pagination]
@@ -11,7 +11,7 @@ theme = 'PaperMod'
 
 [params]
   env = "production"
-  author = "Brian J. Scott"
+  author = "Brian Scott"
   description = "Security researcher and threat intelligence practitioner"
   defaultTheme = "auto"
   ShowReadingTime = true
@@ -22,7 +22,7 @@ theme = 'PaperMod'
   ShowRssButtonInSectionTermList = false
 
 [params.homeInfoParams]
-  Title = "Brian J. Scott"
+  Title = "Brian Scott - Portfolio and Writeups"
   Content = """
 Security researcher and threat intelligence practitioner. \
 Former Security Research Engineer at Cisco ASIG. \
