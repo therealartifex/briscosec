@@ -61,84 +61,32 @@ in digital intelligence and breach data analysis.
 
 ## Technical Background
 
-My offensive security work spans exploit research, dynamic instrumentation,
-malware development, and EDR evasion. At Cisco ASIG, evaluation methodology
-started with constructing adversary-perspective attack models before any
-active testing began, and included static code analysis, reverse engineering,
-active testing in staging environments, and proof-of-concept exploit
-development. PoCs from that period were written in Go, C++, and PowerShell
-depending on the target environment. 
+My offensive security depth comes from four years of product security
+research at Cisco and from independent research conducted through my
+homelab and published work. I hold GXPN (GIAC Exploit Researcher and
+Advanced Penetration Tester), GCPN (GIAC Cloud Penetration Tester), OSCP
+(Offensive Security Certified Professional), and CRTO (Zero-Point Security
+Certified Red Team Operator). I completed Sektor7's Red Team Operations
+course covering malware development, EDR evasion, and Windows privilege
+escalation.
 
-Independent offensive security work has included building a working shellcode
-loader in C++ that pulls ASCII hex-encoded payloads from a network source,
-decodes them in memory, writes to an executable page, and executes without
-touching disk. That loader was tested against Comodo AV using a plain
-Meterpreter binary and evaded detection through the in-memory execution model.
+Prior to Cisco, I worked as a software engineer at HOST Engineering, where
+I identified vulnerabilities in SCADA protocol implementations. That
+background in operational technology informs my understanding of why OT
+environments present distinct defensive challenges relative to IT
+infrastructure.
 
-The Sektor7 Red Team Operations course covered malware development,
-Windows privilege escalation, and EDR evasion at an implementation level.
-I hold GXPN (GIAC Exploit Researcher and Advanced Penetration Tester, 2024),
-GCPN (GIAC Cloud Penetration Tester, 2022), OSCP (Offensive Security
-Certified Professional, 2022), and CRTO (Zero-Point Security Certified Red
-Team Operator, 2021).
+My data engineering background comes from building and operating the
+breach intelligence infrastructure at Southwest Valley Research Group: the
+full collection pipeline, the ClickHouse analytical backend, and the
+custom tooling that supports operational queries across the corpus.
 
-On the data engineering side, I own the full pipeline for a large-scale
-breach intelligence corpus: collection from criminal forums, Telegram
-channels, and BitTorrent DHT; custom Python tooling for ingestion, parsing,
-and normalization; and a ClickHouse analytical backend designed around the
-columnar paradigm with native zstd compression, tiered hot/warm storage with
-TTL-based partition migration, and text indexes for full-text queries across
-the corpus. The ingestion tooling handles breach dumps, stealer logs, and
-ransomware leak data across hundreds of datasets. I also wrote
+I write primarily in Python, C/C++, Go, and PowerShell. Published
+open-source work includes
 [fff](https://github.com/therealartifex/fff), a SIMD/AVX-optimized
-multi-threaded file search tool in C++ built specifically for the structural
-consistency of stealer log formats, which outperforms grep at all tested
-file sizes by distributing file chunks equally across cores and using SIMD
-intrinsics where appropriate.
-
-The intelligence analysis platform currently under development (SCIF) uses
-a multi-backend architecture: ClickHouse for structured analytical queries
-across ten dataset classes, Qdrant for semantic vector search over
-unstructured collection data, Neo4j for provenance graph tracking and entity
-relationship traversal, Redis for async job queue management, and a FastAPI
-backend exposing a natural language query interface. Local LLM inference via
-Ollama is a hard requirement for this platform — sensitive case data does
-not leave the infrastructure.
-
-I contributed a [native cracking module](https://github.com/hashcat/hashcat/pull/2914)
-for Ruby on Rails RESTful Authentication hashes to the official hashcat
-project, eliminating the manual preprocessing previously required for
-this hash type.
-
-My primary languages are Python, C/C++, Go, PowerShell, and C#. I have
-production experience with Python for data pipeline work, C++ for
-performance-sensitive tooling (SIMD/AVX, Windows API, in-memory execution),
-Go for proof-of-concept exploit development, PowerShell for Active Directory
-enumeration and Windows automation, and C# from several years of backend
-development work including an ASP.NET/Informix DB stack at LeTourneau
-University. I can read and work in most languages in active use without
-difficulty.
-
-Forensic and analytical tooling in regular use includes XWays Forensics,
-Maltego, Burp Suite, Nuclei, Semgrep, Trufflehog, Wireshark, and the
-standard Kubernetes and AWS CLI toolchains. For network analysis I work
-with Zeek and Suricata output directly in ClickHouse. R is available for
-statistical analysis of large datasets where Python's pandas is insufficient.
-
-My ICS and SCADA background comes from four years at HOST Engineering, where
-I developed PLC programming software in MFC and C++ for the Do-more H2/BRX,
-DirectLogic DL205, and Terminator T1H product lines. Products from that
-period were deployed in modular water treatment facilities and wind turbine
-vibration analysis platforms. During that time I identified broadcast
-amplification and packet replay vulnerabilities in HOST's proprietary Host
-Automation Protocol through Wireshark analysis, leading to remediation in
-deployed systems.
-
-My senior capstone at LeTourneau was a role-based access control gateway
-for industrial controllers: a Raspberry Pi hosting a Python Flask application
-that triggered iptables rules granting authenticated users access to assigned
-PLC ports on a local network. I led the three-person team, procured the
-hardware, and configured the PLC, switch, and firewall.
+multi-threaded search tool purpose-built for stealer log analysis, and a
+[hashcat module](https://github.com/hashcat/hashcat/pull/2914) for
+cracking Ruby on Rails RESTful Authentication hashes.
 
 ---
 
