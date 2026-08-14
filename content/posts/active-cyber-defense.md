@@ -22,13 +22,16 @@ government published a formal framework for incorporating the private sector int
 ## A Decades-Old Question
 
 In 2005, Shawn Carpenter, a network security analyst at Sandia National Laboratories, was
-actively tracking a Chinese cyber espionage campaign the security community had named Titan
-Rain. The campaign had compromised systems at NASA, Redstone Arsenal, the World Bank, and
-Lockheed-Martin, extracting sensitive data in operations that took as little as ten minutes
-from initial access to exfiltration. Carpenter had implanted tracking software on attacker
-infrastructure and was assembling a detailed picture of the network behind the campaign. The
-FBI, which had initially used him as a confidential informant, eventually opened an
-investigation against him instead. The evidence he had collected was never used. Titan Rain's
+actively tracking a Chinese cyber espionage campaign that federal investigators had designated
+Titan Rain. The campaign had compromised systems at NASA, Redstone Arsenal, the World Bank,
+and Lockheed-Martin, extracting sensitive data in extremely short-term operations, sometimes
+taking less than 30 minutes from initial access to exfiltration. Carpenter had
+implanted tracking software on attacker infrastructure and was assembling a
+detailed picture of the network behind the campaign. He brought his findings
+to Army intelligence, who passed the case to the FBI;
+Carpenter then operated as a confidential FBI informant for several months. The bureau was
+simultaneously investigating him for the same activities, and in March 2005 his handlers
+stopped communicating with him. The evidence he had collected was never used. Titan Rain's
 operators were never charged.
 
 The Carpenter case illustrates the structural problem that has defined this debate for two
@@ -43,11 +46,13 @@ attackers, deploying beaconing technology to establish attribution, retrieving o
 stolen data before it could be used, and disrupting ongoing attacks. The bill was introduced
 in 2017, reintroduced in 2019, and never passed. The legal gap remained open.
 
-On the government operations side, the 2018 National Security Presidential Memorandum 13
-established a "defend forward" doctrine that gave US Cyber Command explicit authority to
-conduct offensive operations outside US networks to disrupt threats before they materialize.
-That authority applied to the military. It did not extend to private organizations defending
-their own infrastructure or operating on behalf of law enforcement.
+On the government operations side, the 2018 DoD Cyber Strategy introduced a "defend forward"
+doctrine of continuous operations to disrupt threats before they reach US networks, while the
+concurrent National Security Presidential Memorandum 13 delegated authorities to US Cyber
+Command to execute time-sensitive offensive operations without requiring White House approval
+for each. Together they established a posture of proactive engagement on foreign networks that
+applied to the military. Neither extended to private organizations defending their own
+infrastructure or operating on behalf of law enforcement.
 
 ---
 
@@ -71,6 +76,11 @@ becomes acute. Passive defense is optimized for breadth and resilience against t
 the threat distribution. The part of that distribution it struggles with is the tail: patient,
 well-resourced actors who study the detection environment and operate specifically to avoid
 triggering its thresholds.
+
+The economic dimension of that failure reinforces the urgency: the 2017 NotPetya
+attack, attributed to Russia's military intelligence, caused an estimated $10 billion
+in global damages and disrupted companies with no connection to its intended
+geopolitical targets.
 
 Let's take a look at just the last several years. The SolarWinds supply chain compromise was
 active for at least nine months before discovery, affecting roughly 18,000 organizations
@@ -112,7 +122,7 @@ Criminal Organizations (CE-TCOs). Put simply, these are foreign groups conductin
 crime against the US government, US persons, or US interests that are not institutional parts
 of a foreign government and are not wholly operated under foreign government direction. LockBit,
 the criminal ransomware operation disrupted by international law enforcement in 2024, fits that
-definition. Volt Typhoon, with its documented ties to China's People's Liberation Army, does
+definition. Volt Typhoon, attributed by US intelligence to the People's Republic of China, does
 not. The program's authority deliberately draws a line between criminal actors and state actors.
 
 Every operation requires written approval from the Program Executive Directors before any
@@ -163,7 +173,10 @@ limitation, the Critical Outcomes prohibition, and the DOJ review requirement fo
 implicating US persons. The program establishes multiple independent review points before
 action is authorized at any stage.
 
-The memo's eligibility requirements are worth calling out specifically. The implementation
+The memo's eligibility requirements are worth calling out specifically. Threat
+intelligence firms, penetration testing companies, and breach response operations
+have spent years building purpose-specific tooling and adversary familiarity that
+government teams cannot easily replicate at scale. The implementation
 procedures must develop standards enabling, in the memo's words, "large companies, which may
 be well-suited to provide significant capacity across multiple operational areas, and smaller,
 more agile companies, which may be well-suited to perform specialized or discrete tasks." The
