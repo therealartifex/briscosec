@@ -1,7 +1,7 @@
 ---
 title: "Building a Threat Intelligence Research Platform: Architecture and Design Decisions"
 date: 2026-06-13
-draft: false
+draft: true
 tags: ["homelab", "threat-intelligence", "clickhouse", "infrastructure", "detection"]
 description: "Architecture and design rationale for a multi-tier security research environment supporting threat intelligence operations, detection engineering, and breach data analysis."
 ---

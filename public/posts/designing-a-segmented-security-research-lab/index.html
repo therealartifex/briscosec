@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Designing a Segmented Security Research Lab | Brian Scott</title>
+<meta name="keywords" content="homelab, infrastructure, network-security, detection, architecture">
+<meta name="description" content="A reference architecture for a segmented security research lab: isolating operational contexts, pointing visibility inward, and eliminating static credentials.">
+<meta name="author" content="Brian Scott">
+<link rel="canonical" href="https://briscosec.io/posts/designing-a-segmented-security-research-lab/">
+<link crossorigin="anonymous" href="/assets/css/stylesheet.6ff46447b1fa3f8a5cc0bcae48088decc3ae37f5fbc99406a3aefc3bf0e6044a.css" integrity="sha256-b/RkR7H6P4pcwLyuSAiN7MOuN/X7yZQGo678O/DmBEo=" rel="preload stylesheet" as="style">
+<link rel="icon" href="https://briscosec.io/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="https://briscosec.io/favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://briscosec.io/favicon-32x32.png">
+<link rel="apple-touch-icon" href="https://briscosec.io/apple-touch-icon.png">
+<link rel="mask-icon" href="https://briscosec.io/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="https://briscosec.io/posts/designing-a-segmented-security-research-lab/">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://briscosec.io/posts/designing-a-segmented-security-research-lab/">
+  <meta property="og:site_name" content="Brian Scott">
+  <meta property="og:title" content="Designing a Segmented Security Research Lab">
+  <meta property="og:description" content="A reference architecture for a segmented security research lab: isolating operational contexts, pointing visibility inward, and eliminating static credentials.">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-09-24T00:00:00+00:00">
+    <meta property="article:modified_time" content="2026-09-24T00:00:00+00:00">
+    <meta property="article:tag" content="Homelab">
+    <meta property="article:tag" content="Infrastructure">
+    <meta property="article:tag" content="Network-Security">
+    <meta property="article:tag" content="Detection">
+    <meta property="article:tag" content="Architecture">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Designing a Segmented Security Research Lab">
+  <meta name="twitter:description" content="A reference architecture for a segmented security research lab: isolating operational contexts, pointing visibility inward, and eliminating static credentials.">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://briscosec.io/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Designing a Segmented Security Research Lab",
+      "item": "https://briscosec.io/posts/designing-a-segmented-security-research-lab/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Designing a Segmented Security Research Lab",
+  "name": "Designing a Segmented Security Research Lab",
+  "description": "A reference architecture for a segmented security research lab: isolating operational contexts, pointing visibility inward, and eliminating static credentials.",
+  "keywords": [
+    "homelab", "infrastructure", "network-security", "detection", "architecture"
+  ],
+  "articleBody": "Running security research, data analysis, and tooling development in one flat environment creates problems that compound quietly. A mistake in one workflow can reach another. There’s no visibility into what’s actually talking to what. And when everything shares a trust boundary, “assume breach” stops being a threat model and becomes wishful thinking. This post walks through a segmented lab design that treats each type of work as its own security context, and the reasoning behind each boundary.\nSegmentation as the foundation The core idea is to separate distinct operational contexts into isolated network segments, with a default-deny policy between them and explicit rules for only the flows the design actually needs. A useful way to decide where the boundaries go is to assume any single segment is compromised and ask what that compromise can reach. Wherever the answer is uncomfortable, there’s a boundary.\nA reasonable starting decomposition:\nManagement: infrastructure and equipment administration, reachable only from a dedicated administrative context and never from the internet. Ingestion: a boundary zone where external data first lands, isolated so that handling untrusted input can’t touch anything downstream. Data flows out of it in one direction only. Data and analysis: where structured data is stored and queried, with no direct internet exposure. Input arrives only through the ingestion boundary. Detection: sensor infrastructure that observes traffic without participating in it. Services: shared internal services such as a reverse proxy, DNS, and authentication. Research: an isolated environment for offensive tooling and untrusted samples, with no route to anything sensitive. The specific segments matter less than the principle: each boundary is enforced at the network layer by policy, not by application-level convention that’s easy to forget or misconfigure.\nVisibility that points inward Most home setups watch the perimeter and go blind internally. A more useful model gives a sensor a mirror of internal traffic so it can observe flows between segments, including ones that never reach the internet. The sensor sits off to the side: it can see everything and reach nothing, which means it adds visibility without adding attack surface. Structured connection and protocol logs plus signature-based detection feed a store you can query, so unexpected movement across a boundary becomes something you can actually notice.\nThe honest caveat: visibility is only the substrate. The work that makes it valuable is writing and tuning detection logic against your own baseline, and that’s ongoing rather than a switch you flip.\nChoosing an analytical store For workloads that are aggregation-heavy, scanning specific fields across a lot of rows rather than fetching whole records, a columnar store is a natural fit. Reading only the columns a query touches, combined with strong column-level compression on repetitive data, keeps both query cost and storage footprint manageable on modest hardware. That’s the reasoning behind the choice, independent of any specific product: match the storage model to the shape of the queries. If your access pattern were single-record lookups or full-text retrieval instead, a different store would be the right call.\nIdentity without static credentials The goal worth aiming for is that no long-lived credential sits on any host. An internal certificate authority issues short-lived, signed credentials, so revoking access is a central action rather than a hunt across machines. Centralized single sign-on with hardware-backed multi-factor authentication fronts internal services, and per-device network authentication replaces shared passphrases. The three properties that fall out of this: every authentication is logged, every access decision is centralized, and there’s nothing static for an attacker to steal and reuse.\nA sensible starting point If you’re building something similar, the order that tends to work is: segment first and get the boundaries right, then add inward-facing visibility, then centralize identity, and only then layer on the heavier workloads. None of it requires exotic hardware. It requires deciding, up front, what each part of your environment is allowed to reach, and enforcing that decision at a layer that doesn’t depend on your remembering it later.\n",
+  "wordCount" : "655",
+  "inLanguage": "en",
+  "datePublished": "2026-09-24T00:00:00Z",
+  "dateModified": "2026-09-24T00:00:00Z",
+  "author":{
+    "@type": "Person",
+    "name": "Brian Scott"
+  },
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://briscosec.io/posts/designing-a-segmented-security-research-lab/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Brian Scott",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://briscosec.io/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="header-nav">
+        <div class="logo">
+            <a href="https://briscosec.io/" accesskey="h" title="Brian Scott (Alt + H)">Brian Scott</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" class="menu">
+            <li>
+                <a href="https://briscosec.io/about/" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://briscosec.io/posts/" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://briscosec.io/resume.pdf" title="Resume">
+                    <span>Resume</span>
+                </a>
+            </li>
+            <li>
+                <a href="https://briscosec.io/search/" title="Search (Alt &#43; /)" accesskey=/>
+                    <span>Search</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    <nav class="breadcrumbs" role="navigation" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+            <a href="/posts/">Posts</a>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevron-right">
+        <polyline points="9 18 15 12 9 6"></polyline>
+    </svg>
+</nav>
+    <h1 class="post-title entry-hint-parent">
+      Designing a Segmented Security Research Lab
+    </h1>
+    <div class="post-description">
+      A reference architecture for a segmented security research lab: isolating operational contexts, pointing visibility inward, and eliminating static credentials.
+    </div>
+    <div class="post-meta">
+
+<span title='2026-09-24 00:00:00 +0000 UTC'>September 24, 2026</span>&nbsp;·&nbsp;<span>4 min</span>&nbsp;·&nbsp;<span>Brian Scott</span>
+
+</div>
+  </header> 
+  <div class="post-content md-content"><p>Running security research, data analysis, and tooling development in one flat
+environment creates problems that compound quietly. A mistake in one workflow
+can reach another. There&rsquo;s no visibility into what&rsquo;s actually talking to what.
+And when everything shares a trust boundary, &ldquo;assume breach&rdquo; stops being a
+threat model and becomes wishful thinking. This post walks through a segmented
+lab design that treats each type of work as its own security context, and the
+reasoning behind each boundary.</p>
+<h2 id="segmentation-as-the-foundation">Segmentation as the foundation<a hidden class="anchor" aria-hidden="true" href="#segmentation-as-the-foundation">#</a></h2>
+<p>The core idea is to separate distinct operational contexts into isolated
+network segments, with a default-deny policy between them and explicit rules
+for only the flows the design actually needs. A useful way to decide where the
+boundaries go is to assume any single segment is compromised and ask what that
+compromise can reach. Wherever the answer is uncomfortable, there&rsquo;s a boundary.</p>
+<p>A reasonable starting decomposition:</p>
+<ul>
+<li><strong>Management</strong>: infrastructure and equipment administration, reachable only
+from a dedicated administrative context and never from the internet.</li>
+<li><strong>Ingestion</strong>: a boundary zone where external data first lands, isolated so
+that handling untrusted input can&rsquo;t touch anything downstream. Data flows out
+of it in one direction only.</li>
+<li><strong>Data and analysis</strong>: where structured data is stored and queried, with no
+direct internet exposure. Input arrives only through the ingestion boundary.</li>
+<li><strong>Detection</strong>: sensor infrastructure that observes traffic without
+participating in it.</li>
+<li><strong>Services</strong>: shared internal services such as a reverse proxy, DNS, and
+authentication.</li>
+<li><strong>Research</strong>: an isolated environment for offensive tooling and untrusted
+samples, with no route to anything sensitive.</li>
+</ul>
+<p>The specific segments matter less than the principle: each boundary is enforced
+at the network layer by policy, not by application-level convention that&rsquo;s easy
+to forget or misconfigure.</p>
+<h2 id="visibility-that-points-inward">Visibility that points inward<a hidden class="anchor" aria-hidden="true" href="#visibility-that-points-inward">#</a></h2>
+<p>Most home setups watch the perimeter and go blind internally. A more useful
+model gives a sensor a mirror of internal traffic so it can observe flows
+between segments, including ones that never reach the internet. The sensor sits
+off to the side: it can see everything and reach nothing, which means it adds
+visibility without adding attack surface. Structured connection and protocol
+logs plus signature-based detection feed a store you can query, so unexpected
+movement across a boundary becomes something you can actually notice.</p>
+<p>The honest caveat: visibility is only the substrate. The work that makes it
+valuable is writing and tuning detection logic against your own baseline, and
+that&rsquo;s ongoing rather than a switch you flip.</p>
+<h2 id="choosing-an-analytical-store">Choosing an analytical store<a hidden class="anchor" aria-hidden="true" href="#choosing-an-analytical-store">#</a></h2>
+<p>For workloads that are aggregation-heavy, scanning specific fields across a lot
+of rows rather than fetching whole records, a columnar store is a natural fit.
+Reading only the columns a query touches, combined with strong column-level
+compression on repetitive data, keeps both query cost and storage footprint
+manageable on modest hardware. That&rsquo;s the reasoning behind the choice,
+independent of any specific product: match the storage model to the shape of
+the queries. If your access pattern were single-record lookups or full-text
+retrieval instead, a different store would be the right call.</p>
+<h2 id="identity-without-static-credentials">Identity without static credentials<a hidden class="anchor" aria-hidden="true" href="#identity-without-static-credentials">#</a></h2>
+<p>The goal worth aiming for is that no long-lived credential sits on any host. An
+internal certificate authority issues short-lived, signed credentials, so
+revoking access is a central action rather than a hunt across machines.
+Centralized single sign-on with hardware-backed multi-factor authentication
+fronts internal services, and per-device network authentication replaces shared
+passphrases. The three properties that fall out of this: every authentication
+is logged, every access decision is centralized, and there&rsquo;s nothing static for
+an attacker to steal and reuse.</p>
+<h2 id="a-sensible-starting-point">A sensible starting point<a hidden class="anchor" aria-hidden="true" href="#a-sensible-starting-point">#</a></h2>
+<p>If you&rsquo;re building something similar, the order that tends to work is: segment
+first and get the boundaries right, then add inward-facing visibility, then
+centralize identity, and only then layer on the heavier workloads. None of it
+requires exotic hardware. It requires deciding, up front, what each part of
+your environment is allowed to reach, and enforcing that decision at a layer
+that doesn&rsquo;t depend on your remembering it later.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="https://briscosec.io/tags/homelab/">Homelab</a></li>
+      <li><a href="https://briscosec.io/tags/infrastructure/">Infrastructure</a></li>
+      <li><a href="https://briscosec.io/tags/network-security/">Network-Security</a></li>
+      <li><a href="https://briscosec.io/tags/detection/">Detection</a></li>
+      <li><a href="https://briscosec.io/tags/architecture/">Architecture</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="next" href="https://briscosec.io/posts/active-cyber-defense/">
+    <span class="title">Next »</span>
+    <span>Active Cyber Defense Comes of Age</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="https://briscosec.io/">Brian Scott</a></span> · 
+
+    
+    
+    <span>
+        Powered by
+        <a href="https://gohugo.io/?utm_source=papermod" rel="noopener" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="#top" id="top-link" class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a>
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var toplink = document.getElementById("top-link");
+    window.onscroll = function () {
+        const scrollThreshold = window.innerHeight;
+        if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+            toplink.classList.remove("hidden");
+        } else {
+            toplink.classList.add("hidden");
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

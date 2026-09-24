@@ -2,37 +2,55 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/architecture/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/homelab_post/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/clickhouse/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/posts/designing-a-segmented-security-research-lab/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/detection/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/detection/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/homelab/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/homelab/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/infrastructure/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/infrastructure/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/posts/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/network-security/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/posts/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/tags/threat-intelligence/</loc>
-    <lastmod>2026-06-13T00:00:00+00:00</lastmod>
+    <loc>https://briscosec.io/tags/</loc>
+    <lastmod>2026-09-24T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/about/</loc>
+    <loc>https://briscosec.io/posts/active-cyber-defense/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/categories/</loc>
+    <loc>https://briscosec.io/tags/active-defense/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>http://localhost:1313/search/</loc>
+    <loc>https://briscosec.io/tags/critical-infrastructure/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/cybersecurity/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/policy/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/tags/threat-intelligence/</loc>
+    <lastmod>2026-08-13T00:00:00+00:00</lastmod>
+  </url><url>
+    <loc>https://briscosec.io/about/</loc>
+  </url><url>
+    <loc>https://briscosec.io/categories/</loc>
+  </url><url>
+    <loc>https://briscosec.io/search/</loc>
   </url>
 </urlset>

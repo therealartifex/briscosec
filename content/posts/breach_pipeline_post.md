@@ -1,7 +1,7 @@
 ---
 title: "Building a Large-Scale Breach Intelligence Pipeline: Collection, Ingestion, and ClickHouse Analytics"
 date: 2026-06-18
-draft: false
+draft: true
 tags: ["threat-intelligence", "breach-data", "clickhouse", "data-engineering", "osint"]
 description: "End-to-end architecture and design decisions behind a production breach intelligence corpus spanning hundreds of datasets, including stealer logs and ransomware leaks."
 ---
